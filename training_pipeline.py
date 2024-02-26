@@ -13,6 +13,7 @@ from transformers import (
 )
 
 COLUMN_NAMES = ["id", "entity", "sentiment", "text"]
+NUM_EPOCHS = 3
 
 tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
 
@@ -69,7 +70,7 @@ def run():
     )
     args = TrainingArguments(
         output_dir="models",
-        num_train_epochs=3,
+        num_train_epochs=NUM_EPOCHS,
         logging_steps=10,
         save_strategy="epoch",
         per_device_train_batch_size=32,
