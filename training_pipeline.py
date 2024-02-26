@@ -58,21 +58,33 @@ def preprocess_texts(texts: List[str]) -> torch.Tensor:
     )
 
 
-df = load_data()
-texts = df["text"].to_list()
-labels = df["label"].to_list()
-all_encodings = preprocess_texts(texts)
+def run():
+    df = load_data()
+    texts = df["text"].to_list()
+    labels = df["label"].to_list()
+    all_encodings = preprocess_texts(texts)
 
-model = DistilBertForSequenceClassification.from_pretrained(
-    "distilbert-base-uncased", num_labels=4
-)
-args = TrainingArguments(output_dir="models", num_train_epochs=3)
-train_dataset = SentimentDataset(all_encodings, labels)
+    model = DistilBertForSequenceClassification.from_pretrained(
+        "distilbert-base-uncased", num_labels=4
+    )
+    args = TrainingArguments(
+        output_dir="models",
+        num_train_epochs=3,
+        logging_steps=10,
+        save_strategy="epoch",
+        per_device_train_batch_size=32,
+    )
 
-trainer = Trainer(
-    model=model,
-    args=args,
-    train_dataset=train_dataset,
-)
+    train_dataset = SentimentDataset(all_encodings, labels)
 
-trainer.train()
+    trainer = Trainer(
+        model=model,
+        args=args,
+        train_dataset=train_dataset,
+    )
+
+    trainer.train()
+
+
+if __name__ == "__main__":
+    run()
