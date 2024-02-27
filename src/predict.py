@@ -3,9 +3,8 @@ import os
 from typing import List
 
 import torch
-from transformers import DistilBertForSequenceClassification
-
 from training_pipeline import NUM_EPOCHS, preprocess_texts
+from transformers import DistilBertForSequenceClassification
 
 
 def int_to_label(label: int) -> str:
