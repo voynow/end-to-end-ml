@@ -1,21 +1,14 @@
-from datetime import datetime
-from typing import List
-
-import pandas as pd
 import torch
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import Dataset
 from transformers import (
-    AdamW,
     DistilBertForSequenceClassification,
-    DistilBertTokenizer,
     Trainer,
     TrainingArguments,
 )
 
-COLUMN_NAMES = ["id", "entity", "sentiment", "text"]
-NUM_EPOCHS = 3
+from src.data_preprocessing import get_training_data
 
-tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+NUM_EPOCHS = 3
 
 
 class SentimentDataset(Dataset):
@@ -32,38 +25,8 @@ class SentimentDataset(Dataset):
         return item
 
 
-def label_to_int(label: str) -> int:
-    label_map = {"Positive": 2, "Neutral": 1, "Negative": 0, "Irrelevant": 3}
-    return label_map[label]
-
-
-def load_data() -> pd.DataFrame:
-    df = pd.read_csv("data/training.csv")
-    df.columns = COLUMN_NAMES
-
-    df["text"] = df["text"].fillna("")
-    df["text"] = df["text"].astype(str)
-    df["label"] = df["sentiment"].apply(label_to_int)
-
-    # Limit the number of rows for testing
-    return df[:2_500]
-
-
-def preprocess_texts(texts: List[str]) -> torch.Tensor:
-    return tokenizer(
-        texts,
-        return_tensors="pt",
-        padding="max_length",
-        truncation=True,
-        max_length=128,
-    )
-
-
 def run():
-    df = load_data()
-    texts = df["text"].to_list()
-    labels = df["label"].to_list()
-    all_encodings = preprocess_texts(texts)
+    all_encodings, labels = get_training_data()
 
     model = DistilBertForSequenceClassification.from_pretrained(
         "distilbert-base-uncased", num_labels=4
@@ -84,7 +47,7 @@ def run():
         train_dataset=train_dataset,
     )
 
-    trainer.train()
+    # trainer.train()
 
 
 if __name__ == "__main__":
