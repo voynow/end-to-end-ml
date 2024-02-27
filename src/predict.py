@@ -33,11 +33,13 @@ def resolve_completed_model_path(
     raise FileNotFoundError("No model with 3 epochs found")
 
 
-model_path = resolve_completed_model_path()
-trained_model = DistilBertForSequenceClassification.from_pretrained(model_path)
+if __name__ == "__main__":
 
-encodings, labels = get_validation_data()
-predictions = predict(encodings, trained_model)
+    model_path = resolve_completed_model_path()
+    trained_model = DistilBertForSequenceClassification.from_pretrained(model_path)
 
-print(labels[:10])
-print(predictions[:10])
+    encodings, labels = get_validation_data()
+    predictions = predict(encodings, trained_model)
+
+    print(f"Predictions: {predictions[:10]}")
+    print(f"Labels: {labels[:10]}")
