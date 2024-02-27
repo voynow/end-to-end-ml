@@ -1,11 +1,12 @@
 import json
 import os
-from typing import List
 
+import numpy as np
 import torch
+from sklearn.metrics import confusion_matrix
 from transformers import DistilBertForSequenceClassification
 
-from src.data_preprocessing import preprocess_texts
+from src.data_preprocessing import get_validation_data
 from src.training_pipeline import NUM_EPOCHS
 
 
@@ -14,13 +15,13 @@ def int_to_label(label: int) -> str:
     return label_map[label]
 
 
-def predict(texts: List[str], model: DistilBertForSequenceClassification) -> List[str]:
-    encodings = preprocess_texts(texts)
+def predict(
+    encodings: torch.tensor, model: DistilBertForSequenceClassification
+) -> np.ndarray:
     with torch.no_grad():
         outputs = model(**encodings)
-        predictions = torch.argmax(outputs.logits, dim=1)
-    predicted_labels = list(map(int_to_label, predictions.numpy()))
-    return predicted_labels
+        predictions = torch.argmax(outputs.logits, dim=1).numpy()
+    return predictions
 
 
 def resolve_completed_model_path(
@@ -34,9 +35,13 @@ def resolve_completed_model_path(
 
 
 model_path = resolve_completed_model_path()
-new_texts = ["I love this product!", "This service is a waste of money."]
 trained_model = DistilBertForSequenceClassification.from_pretrained(model_path)
-predictions = predict(new_texts, trained_model)
 
-for text, label in zip(new_texts, predictions):
-    print(f"Text: {text}, Predicted label: {label}")
+encodings, labels = get_validation_data()
+predictions = predict(encodings, trained_model)
+
+
+# Assuming 'predictions' and 'labels' are numpy arrays or lists
+conf_mat = confusion_matrix(labels, predictions)
+
+print(conf_mat)
