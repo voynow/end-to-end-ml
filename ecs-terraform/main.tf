@@ -48,6 +48,34 @@ resource "aws_security_group" "e2e_ml_sg" {
   }
 }
 
+
+resource "aws_internet_gateway" "e2e_ml_igw" {
+  vpc_id = aws_vpc.e2e_ml_vpc.id
+
+  tags = {
+    Name = "e2e-ml-igw"
+  }
+}
+
+resource "aws_route_table" "e2e_ml_rt" {
+  vpc_id = aws_vpc.e2e_ml_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.e2e_ml_igw.id
+  }
+
+  tags = {
+    Name = "e2e-ml-rt"
+  }
+}
+
+resource "aws_route_table_association" "e2e_ml_rta" {
+  subnet_id      = aws_subnet.e2e_ml_subnet.id
+  route_table_id = aws_route_table.e2e_ml_rt.id
+}
+
+
 resource "aws_ecs_task_definition" "e2e_ml_task" {
   family                   = "e2e-ml-task"
   cpu                      = "256"
@@ -55,7 +83,7 @@ resource "aws_ecs_task_definition" "e2e_ml_task" {
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   execution_role_arn       = aws_iam_role.e2e_ml_execution_role.arn
-  container_definitions    = jsonencode([
+  container_definitions = jsonencode([
     {
       name      = "e2e-ml-container"
       image     = "voynow/sentiment-analysis-api:latest"
@@ -69,6 +97,14 @@ resource "aws_ecs_task_definition" "e2e_ml_task" {
           protocol      = "tcp"
         }
       ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = "/ecs/e2e-ml-service"
+          awslogs-region        = "us-east-1"
+          awslogs-stream-prefix = "ecs"
+        }
+      }
     }
   ])
 }
@@ -91,7 +127,6 @@ resource "aws_ecs_service" "e2e_ml_service" {
   ]
 }
 
-
 resource "aws_iam_role" "e2e_ml_execution_role" {
   name = "e2e_ml_execution_role"
 
@@ -112,4 +147,9 @@ resource "aws_iam_role" "e2e_ml_execution_role" {
 resource "aws_iam_role_policy_attachment" "e2e_ml_execution_role_policy" {
   role       = aws_iam_role.e2e_ml_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_cloudwatch_log_group" "ecs_logs" {
+  name = "/ecs/e2e-ml-service"
+  retention_in_days = 14
 }

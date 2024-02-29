@@ -47,7 +47,7 @@ def run():
         train_dataset=train_dataset,
     )
 
-    # trainer.train()
+    trainer.train()
 
 
 if __name__ == "__main__":
