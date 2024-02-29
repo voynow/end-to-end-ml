@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y \
 # Copy the current directory contents into the container at /usr/src/app
 COPY . .
 
+COPY models /usr/src/app/models
+
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
