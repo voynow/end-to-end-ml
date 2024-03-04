@@ -78,8 +78,8 @@ resource "aws_route_table_association" "e2e_ml_rta" {
 
 resource "aws_ecs_task_definition" "e2e_ml_task" {
   family                   = "e2e-ml-task"
-  cpu                      = "256"
-  memory                   = "512"
+  cpu                      = "512"
+  memory                   = "1024"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   execution_role_arn       = aws_iam_role.e2e_ml_execution_role.arn
