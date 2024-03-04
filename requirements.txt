@@ -7,3 +7,4 @@ fastapi
 uvicorn
 pydantic
 numpy
+boto3

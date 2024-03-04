@@ -1,3 +1,6 @@
+import os
+
+import boto3
 import torch
 from torch.utils.data import Dataset
 from transformers import (
@@ -9,6 +12,8 @@ from transformers import (
 from src.data_preprocessing import get_training_data
 
 NUM_EPOCHS = 3
+BUCKET_NAME = "voynow-model-artifacts"
+PREFIX = "sentiment-analysis-models"
 
 
 class SentimentDataset(Dataset):
@@ -25,6 +30,14 @@ class SentimentDataset(Dataset):
         return item
 
 
+def upload_to_s3(file_name):
+    s3_client = boto3.client("s3")
+    s3_client.upload_file(
+        file_name, BUCKET_NAME, os.path.join(PREFIX, os.path.basename(file_name))
+    )
+    print(f"File {file_name} uploaded to s3://{BUCKET_NAME}/{PREFIX}.")
+
+
 def run():
     all_encodings, labels = get_training_data()
 
@@ -35,7 +48,8 @@ def run():
         output_dir="models",
         num_train_epochs=NUM_EPOCHS,
         logging_steps=10,
-        save_strategy="epoch",
+        save_strategy="no",
+        load_best_model_at_end=False,
         per_device_train_batch_size=32,
     )
 
@@ -48,6 +62,11 @@ def run():
     )
 
     trainer.train()
+
+    # Publish model to S3 artifact store
+    model_save_path = os.path.join(args.output_dir, "sentiment_model.pt")
+    torch.save(model.state_dict(), model_save_path)
+    upload_to_s3(model_save_path)
 
 
 if __name__ == "__main__":
