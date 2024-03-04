@@ -31,11 +31,13 @@ def predict(
 
 def download_model_from_s3(local_dir, filename) -> None:
     """Assuming model exists in S3 model registry"""
+    logging.info(os.listdir())
     if not os.path.exists(local_dir):
         os.makedirs(local_dir)
         logging.info(f"Created directory {local_dir}")
     else:
         logging.info(f"Directory {local_dir} already exists")
+    logging.info(os.listdir())
 
     try:
         s3_client = boto3.client("s3")
