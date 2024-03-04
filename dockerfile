@@ -10,11 +10,14 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the current directory contents into the container at /usr/src/app
-COPY . .
+# Copy requirements.txt only to allegedly use cache effectively
+COPY requirements.txt .
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the current directory contents into the container at /usr/src/app
+COPY . .
 
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
