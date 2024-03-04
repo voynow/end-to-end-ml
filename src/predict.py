@@ -35,6 +35,9 @@ def download_model_from_s3(file_name) -> None:
         s3_client = boto3.client("s3")
         print("TETSTESTTETS")
         logging.info(f"Downloading model from s3://{BUCKET_NAME}/{PREFIX}.")
+        logging.info(os.path.join(PREFIX, os.path.basename(file_name)))
+        logging.info(os.path.basename(file_name))
+        logging.info(file_name)
         s3_client.download_file(
             Bucket=BUCKET_NAME,
             Key=os.path.join(PREFIX, os.path.basename(file_name)),
