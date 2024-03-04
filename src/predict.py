@@ -1,3 +1,4 @@
+import logging
 import os
 
 import boto3
@@ -32,12 +33,14 @@ def download_model_from_s3(file_name) -> None:
     """Assuming model exists in S3 model registry"""
     try:
         s3_client = boto3.client("s3")
+        print("TETSTESTTETS")
+        logging.info(f"Downloading model from s3://{BUCKET_NAME}/{PREFIX}.")
         s3_client.download_file(
             Bucket=BUCKET_NAME,
             Key=os.path.join(PREFIX, os.path.basename(file_name)),
             Filename=file_name,
         )
-        print(f"File {file_name} downloaded from s3://{BUCKET_NAME}/{PREFIX}.")
+        logging.info(f"s3://{BUCKET_NAME}/{PREFIX} successfully downloaded.")
     except Exception as e:
         raise Exception(f"Error downloading model from S3: {e}")
 

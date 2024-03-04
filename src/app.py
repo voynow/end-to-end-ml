@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from fastapi import FastAPI, HTTPException
@@ -7,6 +8,7 @@ from src.data_preprocessing import preprocess_texts
 from src.predict import initialize_model, int_to_label, predict
 
 # Initialize app
+logging.basicConfig(level=logging.INFO)
 app = FastAPI()
 model = initialize_model()
 
