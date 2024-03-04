@@ -7,8 +7,8 @@ resource "aws_ecs_cluster" "e2e_ml_cluster" {
 }
 
 resource "aws_vpc" "e2e_ml_vpc" {
-  cidr_block = "10.0.0.0/16"
-  enable_dns_support = true
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
     Name = "e2e-ml-vpc"
@@ -105,6 +105,12 @@ resource "aws_ecs_task_definition" "e2e_ml_task" {
           awslogs-stream-prefix = "ecs"
         }
       }
+      environment = [
+        {
+          name  = "FORCE_REDEPLOY"
+          value = "1"
+        }
+      ]
     }
   ])
 }
@@ -118,8 +124,8 @@ resource "aws_ecs_service" "e2e_ml_service" {
 
   network_configuration {
     assign_public_ip = true
-    subnets         = [aws_subnet.e2e_ml_subnet.id]
-    security_groups = [aws_security_group.e2e_ml_sg.id]
+    subnets          = [aws_subnet.e2e_ml_subnet.id]
+    security_groups  = [aws_security_group.e2e_ml_sg.id]
   }
 
   depends_on = [
@@ -178,6 +184,6 @@ resource "aws_iam_role_policy_attachment" "e2e_ml_s3_access" {
 
 
 resource "aws_cloudwatch_log_group" "ecs_logs" {
-  name = "/ecs/e2e-ml-service"
+  name              = "/ecs/e2e-ml-service"
   retention_in_days = 14
 }
