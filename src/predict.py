@@ -1,12 +1,17 @@
-import json
 import os
 
+import boto3
 import numpy as np
 import torch
 from transformers import DistilBertForSequenceClassification
 
 from src.data_preprocessing import get_validation_data
-from src.training_pipeline import NUM_EPOCHS
+from src.training_pipeline import (
+    BUCKET_NAME,
+    LOCAL_MODEL_DIR,
+    MODEL_NAME,
+    PREFIX,
+)
 
 
 def int_to_label(label: int) -> str:
@@ -23,23 +28,34 @@ def predict(
     return predictions
 
 
-def resolve_completed_model_path(
-    model_dir_path: str = "models", training_state: str = "trainer_state.json"
-) -> str:
-    for folder in os.listdir(model_dir_path):
-        state = json.load(open(os.path.join(model_dir_path, folder, training_state)))
-        if state["epoch"] == NUM_EPOCHS:
-            return os.path.join(model_dir_path, folder)
-    raise FileNotFoundError("No model with 3 epochs found")
+def download_model_from_s3(file_name) -> None:
+    """Assuming model exists in S3 model registry"""
+    s3_client = boto3.client("s3")
+    s3_client.download_file(
+        Bucket=BUCKET_NAME,
+        Key=os.path.join(PREFIX, os.path.basename(file_name)),
+        Filename=file_name,
+    )
+    print(f"File {file_name} downloaded from s3://{BUCKET_NAME}/{PREFIX}.")
+
+
+def initialize_model() -> DistilBertForSequenceClassification:
+    """Initialize distilbert using .pt file from S3 model registry"""
+    model_path = os.path.join(LOCAL_MODEL_DIR, MODEL_NAME)
+    download_model_from_s3(model_path)
+    model = DistilBertForSequenceClassification.from_pretrained(
+        "distilbert-base-uncased", num_labels=4
+    )
+    model_state_dict = torch.load(model_path)
+    model.load_state_dict(model_state_dict)
+    return model
 
 
 if __name__ == "__main__":
 
-    model_path = resolve_completed_model_path()
-    trained_model = DistilBertForSequenceClassification.from_pretrained(model_path)
-
+    model = initialize_model()
     encodings, labels = get_validation_data()
-    predictions = predict(encodings, trained_model)
+    predictions = predict(encodings, model)
 
     print(f"Predictions: {predictions[:10]}")
     print(f"Labels: {labels[:10]}")

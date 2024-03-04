@@ -1,17 +1,14 @@
 from typing import List
 
-import torch
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from transformers import DistilBertForSequenceClassification
 
 from src.data_preprocessing import preprocess_texts
-from src.predict import int_to_label, resolve_completed_model_path
+from src.predict import initialize_model, int_to_label, predict
 
 # Initialize app
 app = FastAPI()
-model_path = resolve_completed_model_path()
-model = DistilBertForSequenceClassification.from_pretrained(model_path)
+model = initialize_model()
 
 
 class SentimentRequest(BaseModel):
@@ -27,9 +24,7 @@ async def analyze_sentiment(request: SentimentRequest):
     """Sentiment analysis inference endpoint w/ Huggingface DistilBERT"""
     try:
         encodings = preprocess_texts(request.texts)
-        with torch.no_grad():
-            outputs = model(**encodings)
-            predictions = torch.argmax(outputs.logits, dim=1).numpy()
+        predictions = predict(encodings, model)
         labels = [int_to_label(prediction) for prediction in predictions]
         return SentimentResponse(sentiments=labels)
 

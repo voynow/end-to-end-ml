@@ -12,6 +12,8 @@ from transformers import (
 from src.data_preprocessing import get_training_data
 
 NUM_EPOCHS = 3
+LOCAL_MODEL_DIR = "models"
+MODEL_NAME = "sentiment_model.pt"
 BUCKET_NAME = "voynow-model-artifacts"
 PREFIX = "sentiment-analysis-models"
 
@@ -45,7 +47,7 @@ def run():
         "distilbert-base-uncased", num_labels=4
     )
     args = TrainingArguments(
-        output_dir="models",
+        output_dir=LOCAL_MODEL_DIR,
         num_train_epochs=NUM_EPOCHS,
         logging_steps=10,
         save_strategy="no",
@@ -64,7 +66,7 @@ def run():
     trainer.train()
 
     # Publish model to S3 artifact store
-    model_save_path = os.path.join(args.output_dir, "sentiment_model.pt")
+    model_save_path = os.path.join(LOCAL_MODEL_DIR, MODEL_NAME)
     torch.save(model.state_dict(), model_save_path)
     upload_to_s3(model_save_path)
 
