@@ -83,6 +83,7 @@ resource "aws_ecs_task_definition" "e2e_ml_task" {
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   execution_role_arn       = aws_iam_role.e2e_ml_execution_role.arn
+  task_role_arn            = aws_iam_role.e2e_ml_task_role.arn
   container_definitions = jsonencode([
     {
       name      = "e2e-ml-container"
@@ -150,9 +151,21 @@ resource "aws_iam_role" "e2e_ml_execution_role" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "e2e_ml_execution_role_policy" {
-  role       = aws_iam_role.e2e_ml_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+resource "aws_iam_role" "e2e_ml_task_role" {
+  name = "e2e_ml_task_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      },
+    ]
+  })
 }
 
 resource "aws_iam_policy" "e2e_ml_s3_access" {
@@ -177,8 +190,23 @@ resource "aws_iam_policy" "e2e_ml_s3_access" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "e2e_ml_s3_access" {
+resource "aws_iam_role_policy_attachment" "e2e_ml_execution_role_policy" {
   role       = aws_iam_role.e2e_ml_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+# resource "aws_iam_role_policy_attachment" "e2e_ml_s3_access" {
+#   role       = aws_iam_role.e2e_ml_execution_role.name
+#   policy_arn = aws_iam_policy.e2e_ml_s3_access.arn
+# }
+
+# resource "aws_iam_role_policy_attachment" "e2e_ml_task_role_policy" {
+#   role       = aws_iam_role.e2e_ml_task_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+# }
+
+resource "aws_iam_role_policy_attachment" "e2e_ml_s3_access_task" {
+  role       = aws_iam_role.e2e_ml_task_role.name
   policy_arn = aws_iam_policy.e2e_ml_s3_access.arn
 }
 
