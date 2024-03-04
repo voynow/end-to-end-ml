@@ -31,6 +31,12 @@ def predict(
 
 def download_model_from_s3(local_dir, filename) -> None:
     """Assuming model exists in S3 model registry"""
+    if not os.path.exists(local_dir):
+        os.makedirs(local_dir)
+        logging.info(f"Created directory {local_dir}")
+    else:
+        logging.info(f"Directory {local_dir} already exists")
+
     try:
         s3_client = boto3.client("s3")
         logging.info(
@@ -40,11 +46,11 @@ def download_model_from_s3(local_dir, filename) -> None:
         s3_client.download_file(
             Bucket=BUCKET_NAME,
             Key=os.path.join(PREFIX, filename),
-            Filename=os.path.join(local_dir, filename),
+            Filename=os.path.join(local_dir, "filename"),
         )
         logging.info(f"s3://{BUCKET_NAME}/{PREFIX} successfully downloaded.")
     except Exception as e:
-        raise Exception(f"Error downloading model from S3: {e}")
+        raise Exception(f"Error downloading: {e}")
 
 
 def initialize_model() -> DistilBertForSequenceClassification:

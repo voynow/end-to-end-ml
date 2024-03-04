@@ -2,7 +2,6 @@ pandas
 transformers
 torch
 accelerate
-scikit-learn
 fastapi
 uvicorn
 pydantic
