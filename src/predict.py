@@ -29,19 +29,18 @@ def predict(
     return predictions
 
 
-def download_model_from_s3(file_name) -> None:
+def download_model_from_s3(local_dir, filename) -> None:
     """Assuming model exists in S3 model registry"""
     try:
         s3_client = boto3.client("s3")
-        print("TETSTESTTETS")
-        logging.info(f"Downloading model from s3://{BUCKET_NAME}/{PREFIX}.")
-        logging.info(os.path.join(PREFIX, os.path.basename(file_name)))
-        logging.info(os.path.basename(file_name))
-        logging.info(file_name)
+        logging.info(
+            f"Downloading model from s3://{BUCKET_NAME}/{os.path.join(PREFIX, filename)}."
+        )
+        logging.info(f"Saving to {os.path.join(local_dir, filename)}")
         s3_client.download_file(
             Bucket=BUCKET_NAME,
-            Key=os.path.join(PREFIX, os.path.basename(file_name)),
-            Filename=file_name,
+            Key=os.path.join(PREFIX, filename),
+            Filename=os.path.join(local_dir, filename),
         )
         logging.info(f"s3://{BUCKET_NAME}/{PREFIX} successfully downloaded.")
     except Exception as e:
@@ -50,12 +49,12 @@ def download_model_from_s3(file_name) -> None:
 
 def initialize_model() -> DistilBertForSequenceClassification:
     """Initialize distilbert using .pt file from S3 model registry"""
-    model_path = os.path.join(LOCAL_MODEL_DIR, MODEL_NAME)
-    download_model_from_s3(model_path)
+    download_model_from_s3(LOCAL_MODEL_DIR, MODEL_NAME)
     model = DistilBertForSequenceClassification.from_pretrained(
         "distilbert-base-uncased", num_labels=4
     )
-    model_state_dict = torch.load(model_path, map_location=torch.device("cpu"))
+    model_full_path = os.path.join(LOCAL_MODEL_DIR, MODEL_NAME)
+    model_state_dict = torch.load(model_full_path, map_location=torch.device("cpu"))
     model.load_state_dict(model_state_dict)
     return model
 
