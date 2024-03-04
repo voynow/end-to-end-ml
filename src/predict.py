@@ -46,7 +46,7 @@ def initialize_model() -> DistilBertForSequenceClassification:
     model = DistilBertForSequenceClassification.from_pretrained(
         "distilbert-base-uncased", num_labels=4
     )
-    model_state_dict = torch.load(model_path)
+    model_state_dict = torch.load(model_path, map_location=torch.device("cpu"))
     model.load_state_dict(model_state_dict)
     return model
 
